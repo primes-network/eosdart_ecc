@@ -12,18 +12,24 @@ import "package:pointycastle/ecc/curves/secp256k1.dart";
 
 /// abstract EOS Key
 abstract class EOSKey {
+  final String SHA256X2 = 'sha256x2';
+  final int VERSION = 0x80;
+
+  String keyType;
+  Uint8List key;
+
+  /// Default constructor from the key buffer itself
+  EOSKey(this.key);
+
   /// Decode key from string format
   Uint8List decodeKey(String keyStr, [String keyType]) {
     Uint8List buffer = base58.decode(keyStr);
 
-    print(buffer.length);
     Uint8List checksum = buffer.sublist(buffer.length - 4, buffer.length);
-    print(checksum);
     Uint8List key = buffer.sublist(0, buffer.length - 4);
-    print(key);
 
     Uint8List newChecksum;
-    if (keyType == 'sha256x2') {
+    if (keyType == SHA256X2) {
       newChecksum = _sha256x2(key).sublist(0, 4);
     } else {
       if (keyType != null) {
@@ -31,7 +37,6 @@ abstract class EOSKey {
       }
       newChecksum = RIPEMD160Digest().process(key).sublist(0, 4);
     }
-    print(newChecksum);
     if (decodeBigInt(checksum) != decodeBigInt(newChecksum)) {
       throw InvalidKey("checksum error");
     }
@@ -40,7 +45,7 @@ abstract class EOSKey {
 
   /// Encode key to string format using base58 encoding
   String encodeKey(Uint8List key, [String keyType]) {
-    if (keyType == 'sha256x2') {
+    if (keyType == SHA256X2) {
       Uint8List checksum = _sha256x2(key).sublist(0, 4);
       return base58.encode(_concat(key, checksum));
     }
@@ -69,49 +74,52 @@ abstract class EOSKey {
 
 /// EOS Public Key
 class EOSPublicKey extends EOSKey {
-  Uint8List key;
+  /// Construct EOS public key from string
+  EOSPublicKey.fromString(String keyStr) : super(Uint8List(0)) {
+    RegExp publicRegex = RegExp(r"^PUB_([A-Za-z0-9]+)_([A-Za-z0-9]+)",
+        caseSensitive: true, multiLine: false);
+    Iterable<Match> match = publicRegex.allMatches(keyStr);
 
-  EOSPublicKey.fromString(String keyStr) {
-    RegExp publicRegex = RegExp(r"^EOS", caseSensitive: true, multiLine: false);
-    if (!publicRegex.hasMatch(keyStr)) {
-      throw InvalidKey("No leading EOS");
+    if (match.length == 0) {
+      RegExp eosRegex = RegExp(r"^EOS", caseSensitive: true, multiLine: false);
+      if (!eosRegex.hasMatch(keyStr)) {
+        throw InvalidKey("No leading EOS");
+      }
+      String publicKeyStr = keyStr.substring(3);
+      key = decodeKey(publicKeyStr, keyType);
+    } else if (match.length == 1) {
+      Match m = match.first;
+      keyType = m.group(1);
+      key = decodeKey(m.group(2), keyType);
+    } else {
+      throw InvalidKey('Invalid public key format');
     }
-    String publicKeyStr = keyStr.substring(3);
-    key = decodeKey(publicKeyStr);
+  }
+
+  String toString() {
+    return 'EOS' + encodeKey(key, keyType);
   }
 }
 
 /// EOS Private Key
 class EOSPrivateKey extends EOSKey {
-  final String SHA256X2 = 'sha256x2';
-  final int VERSION = 0x80;
-
   String format;
-  String keyType;
-  Uint8List key;
-
-  String _checksumHashMethod;
 
   /// Default constructor from the key buffer itself
-  EOSPrivateKey(this.key) {
-    keyType = 'K1';
-    _checksumHashMethod = SHA256X2;
-  }
+  EOSPrivateKey(Uint8List key) : super(key);
 
   /// Construct the private key from string
   /// It can come from WIF format for PVT format
-  EOSPrivateKey.fromString(String keyStr) {
-    keyType = 'K1';
-
+  EOSPrivateKey.fromString(String keyStr) : super(Uint8List(0)) {
     RegExp privateRegex = RegExp(r"^PVT_([A-Za-z0-9]+)_([A-Za-z0-9]+)",
         caseSensitive: true, multiLine: false);
     Iterable<Match> match = privateRegex.allMatches(keyStr);
 
     if (match.length == 0) {
       format = 'WIF';
-      _checksumHashMethod = SHA256X2;
+      keyType = 'K1';
       // WIF
-      Uint8List keyWLeadingVersion = decodeKey(keyStr, _checksumHashMethod);
+      Uint8List keyWLeadingVersion = decodeKey(keyStr, SHA256X2);
       int version = keyWLeadingVersion.first;
       if (VERSION != version) {
         throw InvalidKey("version mismatch");
@@ -126,9 +134,10 @@ class EOSPrivateKey extends EOSKey {
         throw InvalidKey('Expecting 32 bytes, got ${key.length}');
       }
     } else if (match.length == 1) {
+      format = 'PVT';
       Match m = match.first;
-      format = m.group(1);
-      key = decodeKey(m.group(2), format);
+      keyType = m.group(1);
+      key = decodeKey(m.group(2), keyType);
     } else {
       throw InvalidKey('Invalid Private Key format');
     }
@@ -157,8 +166,12 @@ class EOSPrivateKey extends EOSKey {
     int randomInt2 = randomGenerator.nextInt(randomLimit);
     Uint8List entropy2 = encodeBigInt(BigInt.from(randomInt2));
 
+    int randomInt3 = randomGenerator.nextInt(randomLimit);
+    Uint8List entropy3 = encodeBigInt(BigInt.from(randomInt3));
+
     List<int> entropy = entropy1.toList();
     entropy.addAll(entropy2);
+    entropy.addAll(entropy3);
     Uint8List randomKey = Uint8List.fromList(entropy);
     Digest d = sha256.convert(randomKey);
     return EOSPrivateKey(d.bytes);
@@ -191,6 +204,6 @@ class EOSPrivateKey extends EOSKey {
     Uint8List keyWLeadingVersion =
         _concat(Uint8List.fromList(version), this.key);
 
-    return encodeKey(keyWLeadingVersion, _checksumHashMethod);
+    return encodeKey(keyWLeadingVersion, SHA256X2);
   }
 }

@@ -5,8 +5,11 @@ void main() {
   group('EOS Key tests', () {
     test('Construct EOS public key from string', () {
       EOSPublicKey publicKey = EOSPublicKey.fromString(
-          'EOS7k4gMHmn94GvQG6vWLanC9rp9WhVGrMUCR4HdxNBwP9R6sRwJq');
+          'EOS8Qi58kbERkTJC7A4gabxYU4SbrAxStJHacoke4sf6AvJyEDZXj');
       print(publicKey);
+
+      expect('EOS8Qi58kbERkTJC7A4gabxYU4SbrAxStJHacoke4sf6AvJyEDZXj',
+          publicKey.toString());
     });
 
     test('Construct EOS private key from string', () {
