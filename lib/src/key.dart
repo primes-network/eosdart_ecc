@@ -15,6 +15,11 @@ import './key_base.dart';
 
 /// EOS Public Key
 class EOSPublicKey extends EOSKey {
+  Uint8List q;
+
+  /// Default constructor from the key buffer itself
+  EOSPublicKey(this.q);
+
   /// Construct EOS public key from string
   EOSPublicKey.fromString(String keyStr) {
     RegExp publicRegex = RegExp(r"^PUB_([A-Za-z0-9]+)_([A-Za-z0-9]+)",
@@ -27,27 +32,28 @@ class EOSPublicKey extends EOSKey {
         throw InvalidKey("No leading EOS");
       }
       String publicKeyStr = keyStr.substring(3);
-      key = EOSKey.decodeKey(publicKeyStr, keyType);
+      q = EOSKey.decodeKey(publicKeyStr, keyType);
     } else if (match.length == 1) {
       Match m = match.first;
       keyType = m.group(1);
-      key = EOSKey.decodeKey(m.group(2), keyType);
+      q = EOSKey.decodeKey(m.group(2), keyType);
     } else {
       throw InvalidKey('Invalid public key format');
     }
   }
 
   String toString() {
-    return 'EOS' + EOSKey.encodeKey(key, keyType);
+    return 'EOS' + EOSKey.encodeKey(q, keyType);
   }
 }
 
 /// EOS Private Key
 class EOSPrivateKey extends EOSKey {
+  Uint8List d;
   String format;
 
   /// Default constructor from the key buffer itself
-  EOSPrivateKey(Uint8List key) : super(key);
+  EOSPrivateKey(this.d);
 
   /// Construct the private key from string
   /// It can come from WIF format for PVT format
@@ -66,19 +72,20 @@ class EOSPrivateKey extends EOSKey {
         throw InvalidKey("version mismatch");
       }
 
-      key = keyWLeadingVersion.sublist(1, keyWLeadingVersion.length);
-      if (key.length == 33 && key.elementAt(32) == 1) {
-        key = key.sublist(0, 32);
+      d = keyWLeadingVersion.sublist(1, keyWLeadingVersion.length);
+      if (d.length == 33 && d.elementAt(32) == 1) {
+        // remove compression flag
+        d = d.sublist(0, 32);
       }
 
-      if (key.length != 32) {
-        throw InvalidKey('Expecting 32 bytes, got ${key.length}');
+      if (d.length != 32) {
+        throw InvalidKey('Expecting 32 bytes, got ${d.length}');
       }
     } else if (match.length == 1) {
       format = 'PVT';
       Match m = match.first;
       keyType = m.group(1);
-      key = EOSKey.decodeKey(m.group(2), keyType);
+      d = EOSKey.decodeKey(m.group(2), keyType);
     } else {
       throw InvalidKey('Invalid Private Key format');
     }
@@ -123,24 +130,20 @@ class EOSPrivateKey extends EOSKey {
 
   /// Get the public key string from this private key
   String toEOSPublicKey() {
-    BigInt privateKeyNum = decodeBigInt(this.key);
+    BigInt privateKeyNum = decodeBigInt(this.d);
     pointycastle.ECPoint ecPoint = ECCurve_secp256k1().G * privateKeyNum;
+    // always compressed
     Uint8List encodedBuffer = ecPoint.getEncoded(true);
 
-    Uint8List checksum = RIPEMD160Digest().process(encodedBuffer);
-    checksum = checksum.sublist(0, 4);
-
-    Uint8List key = EOSKey.concat(encodedBuffer, checksum);
-    String publicKey = 'EOS' + base58.encode(key);
-
-    return publicKey;
+    EOSPublicKey publicKey = EOSPublicKey(encodedBuffer);
+    return publicKey.toString();
   }
 
   String toString() {
     List<int> version = List<int>();
     version.add(EOSKey.VERSION);
     Uint8List keyWLeadingVersion =
-        EOSKey.concat(Uint8List.fromList(version), this.key);
+        EOSKey.concat(Uint8List.fromList(version), this.d);
 
     return EOSKey.encodeKey(keyWLeadingVersion, EOSKey.SHA256X2);
   }

@@ -7,10 +7,12 @@ class EOSSignature extends EOSKey {
   int i;
   Uint8List r;
   Uint8List s;
+  Uint8List buffer;
 
   /// Default constructor from the key buffer itself
   EOSSignature(Uint8List buffer, String keyType) {
     this.keyType = keyType;
+    this.buffer = buffer;
 
     if (buffer.length != 65) {
       throw InvalidKey('Invalid signature length');
@@ -24,14 +26,9 @@ class EOSSignature extends EOSKey {
 
     r = buffer.sublist(1, 33);
     s = buffer.sublist(33, 65);
-
-    List<int> k = List();
-    k.add(32);
-    k.addAll(r);
-    k.addAll(s);
-    this.key = Uint8List.fromList(k);
   }
 
+  /// Construct EOS signature from string
   factory EOSSignature.fromString(String signatureStr) {
     RegExp sigRegex = RegExp(r"^SIG_([A-Za-z0-9]+)_([A-Za-z0-9]+)",
         caseSensitive: true, multiLine: false);
@@ -48,6 +45,6 @@ class EOSSignature extends EOSKey {
   }
 
   String toString() {
-    return 'SIG_${keyType}_${EOSKey.encodeKey(key, keyType)}';
+    return 'SIG_${keyType}_${EOSKey.encodeKey(buffer, keyType)}';
   }
 }

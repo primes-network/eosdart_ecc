@@ -14,10 +14,6 @@ abstract class EOSKey {
   static final int VERSION = 0x80;
 
   String keyType;
-  Uint8List key;
-
-  /// Default constructor from the key buffer itself
-  EOSKey([this.key]);
 
   /// Decode key from string format
   static Uint8List decodeKey(String keyStr, [String keyType]) {
