@@ -3,11 +3,12 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:bs58check/bs58check.dart';
+import 'package:crypto/crypto.dart';
 import 'package:pointycastle/digests/ripemd160.dart';
+import "package:pointycastle/ecc/curves/secp256k1.dart";
 import 'package:pointycastle/pointycastle.dart' as pointycastle;
 import 'package:pointycastle/src/utils.dart';
-import 'package:crypto/crypto.dart';
-import "package:pointycastle/ecc/curves/secp256k1.dart";
+import "package:pointycastle/signers/ecdsa_signer.dart";
 
 import './exception.dart';
 import './key_base.dart';

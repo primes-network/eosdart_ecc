@@ -12,6 +12,12 @@ void main() {
           publicKey.toString());
     });
 
+    test('Construct EOS public key from string PUB_K1 format', () {
+      EOSPublicKey publicKey = EOSPublicKey.fromString(
+          'PUB_K1_859gxfnXyUriMgUeThh1fWv3oqcpLFyHa3TfFYC4PK2Ht7beeX');
+      print(publicKey);
+    });
+
     test('Construct EOS private key from string', () {
       // common private key
       EOSPrivateKey privateKey = EOSPrivateKey.fromString(
@@ -20,6 +26,16 @@ void main() {
           privateKey.toEOSPublicKey());
       expect('5J9b3xMkbvcT6gYv2EpQ8FD4ZBjgypuNKwE1jxkd7Wd1DYzhk88',
           privateKey.toString());
+    });
+
+    test('Invalid EOS private key', () {
+      try {
+        EOSPrivateKey.fromString(
+            '5KYZdUEo39z3FPrtuX2QbbwGnNP5zTd7yyr2SC1j299sBCnWjsm');
+        fail('Should be invalid private key');
+      } on InvalidKey {} catch (e) {
+        fail('Should throw InvalidKey exception');
+      }
     });
 
     test('Construct random EOS private key from seed', () {
