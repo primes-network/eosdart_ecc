@@ -44,7 +44,7 @@ void main() {
       print(privateKey.toEOSPublicKey());
 
       EOSPrivateKey privateKey2 =
-      EOSPrivateKey.fromString(privateKey.toString());
+          EOSPrivateKey.fromString(privateKey.toString());
       expect(privateKey.toEOSPublicKey().toString(),
           privateKey2.toEOSPublicKey().toString());
     });
@@ -56,7 +56,7 @@ void main() {
       print(privateKey.toEOSPublicKey());
 
       EOSPrivateKey privateKey2 =
-      EOSPrivateKey.fromString(privateKey.toString());
+          EOSPrivateKey.fromString(privateKey.toString());
       expect(privateKey.toEOSPublicKey().toString(),
           privateKey2.toEOSPublicKey().toString());
     });

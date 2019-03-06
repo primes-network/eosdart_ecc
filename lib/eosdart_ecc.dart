@@ -5,4 +5,3 @@ library eosdart_ecc;
 export 'src/key.dart';
 export 'src/signature.dart';
 export 'src/exception.dart';
-

@@ -12,7 +12,7 @@ import 'package:pointycastle/macs/hmac.dart';
 import "package:pointycastle/digests/sha256.dart";
 
 import './exception.dart';
-import './eosdart_ecc_base.dart';
+import './key_base.dart';
 import './signature.dart';
 
 /// EOS Public Key
@@ -180,7 +180,7 @@ class EOSPrivateKey extends EOSKey {
     List<int> version = List<int>();
     version.add(EOSKey.VERSION);
     Uint8List keyWLeadingVersion =
-    EOSKey.concat(Uint8List.fromList(version), this.d);
+        EOSKey.concat(Uint8List.fromList(version), this.d);
 
     return EOSKey.encodeKey(keyWLeadingVersion, EOSKey.SHA256X2);
   }
