@@ -12,8 +12,9 @@ import 'package:pointycastle/src/utils.dart';
 
 import './exception.dart';
 import './key_base.dart';
-import './key.dart';
+import './eosdart_ecc_base.dart';
 
+/// EOS Signature
 class EOSSignature extends EOSKey {
   int i;
   ECSignature ecSig;
@@ -106,6 +107,7 @@ class EOSSignature extends EOSKey {
     return Uint8List.fromList(b);
   }
 
+  /// Find the public key recovery factor
   static int calcPubKeyRecoveryParam(
       BigInt e, ECSignature ecSig, EOSPublicKey publicKey) {
     for (int i = 0; i < 4; i++) {
