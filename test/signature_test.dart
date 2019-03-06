@@ -20,15 +20,20 @@ void main() {
       EOSPrivateKey privateKey = EOSPrivateKey.fromString(
           '5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3');
       EOSPublicKey publicKey = privateKey.toEOSPublicKey();
+      String sig =
+          'SIG_K1_Kg417TSLuhzSpU2bGa21kD1UNaTfAZSCcKmKpZ6fnx3Nqu22gzG3ND4Twur7bzX8oS1J91JvV4rMJcFycGqFBSaY2SJcEQ';
 
       String data = 'data';
       Uint8List hashData = sha256.convert(utf8.encode(data)).bytes;
       EOSSignature signature = privateKey.signHash(hashData);
+      EOSSignature signature2 = privateKey.sign(data);
 
-      expect(
-          'SIG_K1_Kg417TSLuhzSpU2bGa21kD1UNaTfAZSCcKmKpZ6fnx3Nqu22gzG3ND4Twur7bzX8oS1J91JvV4rMJcFycGqFBSaY2SJcEQ',
-          signature.toString());
+      expect(sig, signature.toString());
       expect(true, signature.verifyHash(hashData, publicKey));
+      expect(true, signature2.verify(data, publicKey));
+
+      expect(true, signature.verify(data, publicKey));
+      expect(true, signature2.verify(data, publicKey));
     });
   });
 }

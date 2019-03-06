@@ -1,5 +1,7 @@
 import 'dart:typed_data';
+import 'dart:convert';
 
+import 'package:crypto/crypto.dart';
 import "package:pointycastle/api.dart" show PublicKeyParameter;
 import 'package:pointycastle/ecc/api.dart'
     show ECPublicKey, ECSignature, ECPoint;
@@ -56,6 +58,13 @@ class EOSSignature extends EOSKey {
     }
 
     throw InvalidKey("Invalid EOS signature");
+  }
+
+  /// Verify the signature of the string data
+  bool verify(String data, EOSPublicKey publicKey) {
+    Digest d = sha256.convert(utf8.encode(data));
+
+    return verifyHash(d.bytes, publicKey);
   }
 
   /// Verify the signature from in SHA256 hashed data
