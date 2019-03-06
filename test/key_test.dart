@@ -23,7 +23,7 @@ void main() {
       EOSPrivateKey privateKey = EOSPrivateKey.fromString(
           '5J9b3xMkbvcT6gYv2EpQ8FD4ZBjgypuNKwE1jxkd7Wd1DYzhk88');
       expect('EOS8Qi58kbERkTJC7A4gabxYU4SbrAxStJHacoke4sf6AvJyEDZXj',
-          privateKey.toEOSPublicKey());
+          privateKey.toEOSPublicKey().toString());
       expect('5J9b3xMkbvcT6gYv2EpQ8FD4ZBjgypuNKwE1jxkd7Wd1DYzhk88',
           privateKey.toString());
     });
@@ -45,7 +45,8 @@ void main() {
 
       EOSPrivateKey privateKey2 =
           EOSPrivateKey.fromString(privateKey.toString());
-      expect(privateKey.toEOSPublicKey(), privateKey2.toEOSPublicKey());
+      expect(privateKey.toEOSPublicKey().toString(),
+          privateKey2.toEOSPublicKey().toString());
     });
 
     test('Construct random EOS private key', () {
@@ -56,7 +57,8 @@ void main() {
 
       EOSPrivateKey privateKey2 =
           EOSPrivateKey.fromString(privateKey.toString());
-      expect(privateKey.toEOSPublicKey(), privateKey2.toEOSPublicKey());
+      expect(privateKey.toEOSPublicKey().toString(),
+          privateKey2.toEOSPublicKey().toString());
     });
 
     test('Construct EOS private key from string in PVT format', () {

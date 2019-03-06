@@ -2,9 +2,10 @@ import 'dart:typed_data';
 import 'dart:convert';
 
 import 'package:bs58check/bs58check.dart';
+import 'package:crypto/crypto.dart';
 import 'package:pointycastle/digests/ripemd160.dart';
 import 'package:pointycastle/src/utils.dart';
-import 'package:crypto/crypto.dart';
+import "package:pointycastle/ecc/curves/secp256k1.dart";
 
 import './exception.dart';
 
@@ -12,6 +13,7 @@ import './exception.dart';
 abstract class EOSKey {
   static final String SHA256X2 = 'sha256x2';
   static final int VERSION = 0x80;
+  static final ECCurve_secp256k1 secp256k1 = ECCurve_secp256k1();
 
   String keyType;
 
