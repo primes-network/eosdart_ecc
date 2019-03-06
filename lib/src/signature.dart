@@ -11,7 +11,7 @@ import "package:pointycastle/digests/sha256.dart";
 import 'package:pointycastle/src/utils.dart';
 
 import './exception.dart';
-import './key_base.dart';
+import './key.dart';
 import './eosdart_ecc_base.dart';
 
 /// EOS Signature
