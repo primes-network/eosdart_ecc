@@ -1,3 +1,7 @@
+## 0.2.2
+
+- Healthy change
+
 ## 0.2.1
 
 - Add CHANGELOG.md

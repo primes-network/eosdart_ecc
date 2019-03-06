@@ -28,7 +28,7 @@ class EOSPublicKey extends EOSKey {
         caseSensitive: true, multiLine: false);
     Iterable<Match> match = publicRegex.allMatches(keyStr);
 
-    if (match.length == 0) {
+    if (match.isEmpty) {
       RegExp eosRegex = RegExp(r"^EOS", caseSensitive: true, multiLine: false);
       if (!eosRegex.hasMatch(keyStr)) {
         throw InvalidKey("No leading EOS");
@@ -76,7 +76,7 @@ class EOSPrivateKey extends EOSKey {
         caseSensitive: true, multiLine: false);
     Iterable<Match> match = privateRegex.allMatches(keyStr);
 
-    if (match.length == 0) {
+    if (match.isEmpty) {
       format = 'WIF';
       keyType = 'K1';
       // WIF
