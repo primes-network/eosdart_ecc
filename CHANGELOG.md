@@ -1,3 +1,7 @@
+## 0.3.0
+
+- Support canonical signature
+
 ## 0.2.2
 
 - Healthy change
