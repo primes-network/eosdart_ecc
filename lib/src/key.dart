@@ -4,12 +4,7 @@ import 'dart:math';
 
 import 'package:crypto/crypto.dart';
 import 'package:pointycastle/src/utils.dart';
-import "package:pointycastle/api.dart" show PrivateKeyParameter;
-import 'package:pointycastle/ecc/api.dart'
-    show ECPrivateKey, ECSignature, ECPoint;
-import "package:pointycastle/signers/ecdsa_signer.dart";
-import 'package:pointycastle/macs/hmac.dart';
-import "package:pointycastle/digests/sha256.dart";
+import 'package:pointycastle/ecc/api.dart' show ECSignature, ECPoint;
 
 import './exception.dart';
 import './key_base.dart';
@@ -65,6 +60,9 @@ class EOSPublicKey extends EOSKey {
 class EOSPrivateKey extends EOSKey {
   Uint8List d;
   String format;
+
+  BigInt _r;
+  BigInt _s;
 
   /// Constructor EOS private key from the key buffer itself
   EOSPrivateKey.fromBuffer(this.d);
@@ -159,9 +157,16 @@ class EOSPrivateKey extends EOSKey {
   /// Sign the SHA256 hashed data using the private key
   EOSSignature signHash(Uint8List sha256Data) {
     int nonce = 0;
+    BigInt n = EOSKey.secp256k1.n;
 
     while (true) {
-      ECSignature sig = _deterministicGenerateK(sha256Data, this.d, nonce);
+      _deterministicGenerateK(sha256Data, this.d, nonce);
+      var N_OVER_TWO = n >> 1;
+      if (_s.compareTo(N_OVER_TWO) > 0) {
+        _s = n - _s;
+      }
+      ECSignature sig = ECSignature(_r, _s);
+
       Uint8List der = EOSSignature.ecSigToDER(sig);
 
       int lenR = der.elementAt(3);
@@ -185,16 +190,87 @@ class EOSPrivateKey extends EOSKey {
     return EOSKey.encodeKey(keyWLeadingVersion, EOSKey.SHA256X2);
   }
 
-  ECSignature _deterministicGenerateK(Uint8List hash, Uint8List x, int nonce) {
-    List<int> data = List();
-    data.addAll(hash);
-    data.add(nonce);
+  BigInt _deterministicGenerateK(Uint8List hash, Uint8List x, int nonce) {
+    if (nonce > 0) {
+      List<int> data = List.from(hash)..add(nonce);
+      hash = Uint8List.fromList(data);
+    }
 
-    Uint8List newHash = Uint8List.fromList(data);
-    final signer = ECDSASigner(null, HMac(SHA256Digest(), 64));
-    var pkp = new PrivateKeyParameter(
-        ECPrivateKey(decodeBigInt(x), EOSKey.secp256k1));
-    signer.init(true, pkp);
-    return signer.generateSignature(newHash);
+    // Step B
+    Uint8List v = Uint8List(32);
+    for (int i = 0; i < v.lengthInBytes; i++) {
+      v[i] = 1;
+    }
+
+    // Step C
+    Uint8List k = Uint8List(32);
+
+    // Step D
+    List<int> d1 = List.from(v)
+      ..add(0)
+      ..addAll(x)
+      ..addAll(hash);
+
+    Hmac hMacSha256 = new Hmac(sha256, k); // HMAC-SHA256
+    k = hMacSha256.convert(d1).bytes;
+
+    // Step E
+    hMacSha256 = new Hmac(sha256, k); // HMAC-SHA256
+    v = hMacSha256.convert(v).bytes;
+
+    // Step F
+    List<int> d2 = List.from(v)
+      ..add(1)
+      ..addAll(x)
+      ..addAll(hash);
+
+    k = hMacSha256.convert(d2).bytes;
+
+    // Step G
+    hMacSha256 = new Hmac(sha256, k); // HMAC-SHA256
+    v = hMacSha256.convert(v).bytes;
+    // Step H1/H2a, again, ignored as tlen === qlen (256 bit)
+    // Step H2b again
+    v = hMacSha256.convert(v).bytes;
+
+    BigInt T = decodeBigInt(v);
+
+    // Step H3, repeat until T is within the interval [1, n - 1]
+    while (T.sign <= 0 ||
+        T.compareTo(EOSKey.secp256k1.n) >= 0 ||
+        !_checkSig(hash, T)) {
+      List<int> d3 = List.from(v)..add(0);
+      k = hMacSha256.convert(d3).bytes;
+      hMacSha256 = new Hmac(sha256, k); // HMAC-SHA256
+      v = hMacSha256.convert(v).bytes;
+      // Step H1/H2a, again, ignored as tlen === qlen (256 bit)
+      // Step H2b again
+      v = hMacSha256.convert(v).bytes;
+
+      T = decodeBigInt(v);
+    }
+    return T;
+  }
+
+  bool _checkSig(Uint8List hash, BigInt k) {
+    BigInt n = EOSKey.secp256k1.n;
+    ECPoint Q = EOSKey.secp256k1.G * k;
+
+    if (Q.isInfinity) {
+      return false;
+    }
+
+    _r = Q.x.toBigInteger() % n;
+    if (_r.sign == 0) {
+      return false;
+    }
+
+    BigInt e = decodeBigInt(hash);
+    _s = k.modInverse(EOSKey.secp256k1.n) * (e + decodeBigInt(d) * _r) % n;
+    if (_s.sign == 0) {
+      return false;
+    }
+
+    return true;
   }
 }
