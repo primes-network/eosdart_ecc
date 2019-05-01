@@ -24,9 +24,9 @@ main() {
 
   // Going to sign the data
   String data = 'data';
-  
+
   // Sign
-  EOSSignature signature = privateKey.sign(data);
+  EOSSignature signature = privateKey.signString(data);
   // Print the EOS signature
   print(signature.toString());
 

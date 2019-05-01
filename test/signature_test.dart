@@ -26,7 +26,7 @@ void main() {
       String data = 'data';
       Uint8List hashData = sha256.convert(utf8.encode(data)).bytes;
       EOSSignature signature = privateKey.signHash(hashData);
-      EOSSignature signature2 = privateKey.sign(data);
+      EOSSignature signature2 = privateKey.signString(data);
 
       print(signature.toString());
       expect(expectedSig, signature.toString());

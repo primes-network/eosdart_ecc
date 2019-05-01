@@ -148,10 +148,15 @@ class EOSPrivateKey extends EOSKey {
     return EOSPublicKey.fromPoint(ecPoint);
   }
 
-  /// Sign the string data using the private key
-  EOSSignature sign(String data) {
-    Digest d = sha256.convert(utf8.encode(data));
+  /// Sign the bytes data using the private key
+  EOSSignature sign(Uint8List data) {
+    Digest d = sha256.convert(data);
     return signHash(d.bytes);
+  }
+
+  /// Sign the string data using the private key
+  EOSSignature signString(String data) {
+    return sign(utf8.encode(data));
   }
 
   /// Sign the SHA256 hashed data using the private key
