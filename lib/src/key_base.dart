@@ -72,14 +72,12 @@ abstract class EOSKey {
     List<int> result = List();
     for (int i = 0; i < bytes.length; i++) {
       int v = bytes[i].toSigned(8);
+      //TODO I don't know why, just guess...
       if (i == 0 && v < 0) {
         result.add(0);
       }
       result.add(v);
     }
-//    for (int i in bytes.toList()){
-//      result.add(i.toSigned(8));
-//    }
     return result;
   }
 }
