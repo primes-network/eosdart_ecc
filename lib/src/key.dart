@@ -163,9 +163,10 @@ class EOSPrivateKey extends EOSKey {
   EOSSignature signHash(Uint8List sha256Data) {
     int nonce = 0;
     BigInt n = EOSKey.secp256k1.n;
+    BigInt e = decodeBigInt(sha256Data);
 
     while (true) {
-      _deterministicGenerateK(sha256Data, this.d, nonce);
+      _deterministicGenerateK(sha256Data, this.d, e, nonce++);
       var N_OVER_TWO = n >> 1;
       if (_s.compareTo(N_OVER_TWO) > 0) {
         _s = n - _s;
@@ -179,8 +180,8 @@ class EOSPrivateKey extends EOSKey {
       if (lenR == 32 && lenS == 32) {
         int i = EOSSignature.calcPubKeyRecoveryParam(
             decodeBigInt(sha256Data), sig, this.toEOSPublicKey());
-        i += 4;
-        i += 27;
+        i += 4; // compressed
+        i += 27; // compact  //  24 or 27 :( forcing odd-y 2nd key candidate)
         return EOSSignature(i, sig.r, sig.s);
       }
     }
@@ -195,10 +196,13 @@ class EOSPrivateKey extends EOSKey {
     return EOSKey.encodeKey(keyWLeadingVersion, EOSKey.SHA256X2);
   }
 
-  BigInt _deterministicGenerateK(Uint8List hash, Uint8List x, int nonce) {
+  BigInt _deterministicGenerateK(
+      Uint8List hash, Uint8List x, BigInt e, int nonce) {
+    List<int> newHash = hash;
     if (nonce > 0) {
-      List<int> data = List.from(hash)..add(nonce);
-      hash = Uint8List.fromList(data);
+      List<int> addition = Uint8List(nonce);
+      List<int> data = List.from(hash)..addAll(addition);
+      newHash = sha256.convert(data).bytes;
     }
 
     // Step B
@@ -214,7 +218,7 @@ class EOSPrivateKey extends EOSKey {
     List<int> d1 = List.from(v)
       ..add(0)
       ..addAll(x)
-      ..addAll(hash);
+      ..addAll(newHash);
 
     Hmac hMacSha256 = new Hmac(sha256, k); // HMAC-SHA256
     k = hMacSha256.convert(d1).bytes;
@@ -227,7 +231,7 @@ class EOSPrivateKey extends EOSKey {
     List<int> d2 = List.from(v)
       ..add(1)
       ..addAll(x)
-      ..addAll(hash);
+      ..addAll(newHash);
 
     k = hMacSha256.convert(d2).bytes;
 
@@ -239,11 +243,10 @@ class EOSPrivateKey extends EOSKey {
     v = hMacSha256.convert(v).bytes;
 
     BigInt T = decodeBigInt(v);
-
     // Step H3, repeat until T is within the interval [1, n - 1]
     while (T.sign <= 0 ||
         T.compareTo(EOSKey.secp256k1.n) >= 0 ||
-        !_checkSig(hash, T)) {
+        !_checkSig(e, newHash, T)) {
       List<int> d3 = List.from(v)..add(0);
       k = hMacSha256.convert(d3).bytes;
       hMacSha256 = new Hmac(sha256, k); // HMAC-SHA256
@@ -257,7 +260,7 @@ class EOSPrivateKey extends EOSKey {
     return T;
   }
 
-  bool _checkSig(Uint8List hash, BigInt k) {
+  bool _checkSig(BigInt e, Uint8List hash, BigInt k) {
     BigInt n = EOSKey.secp256k1.n;
     ECPoint Q = EOSKey.secp256k1.G * k;
 
@@ -270,7 +273,6 @@ class EOSPrivateKey extends EOSKey {
       return false;
     }
 
-    BigInt e = decodeBigInt(hash);
     _s = k.modInverse(EOSKey.secp256k1.n) * (e + decodeBigInt(d) * _r) % n;
     if (_s.sign == 0) {
       return false;

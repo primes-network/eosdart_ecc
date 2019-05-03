@@ -67,4 +67,19 @@ abstract class EOSKey {
     keyList.addAll(p2);
     return Uint8List.fromList(keyList);
   }
+
+  static List<int> toSigned(Uint8List bytes) {
+    List<int> result = List();
+    for (int i = 0; i < bytes.length; i++) {
+      int v = bytes[i].toSigned(8);
+      if (i == 0 && v < 0) {
+        result.add(0);
+      }
+      result.add(v);
+    }
+//    for (int i in bytes.toList()){
+//      result.add(i.toSigned(8));
+//    }
+    return result;
+  }
 }

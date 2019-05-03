@@ -89,16 +89,16 @@ class EOSSignature extends EOSKey {
 
   /// ECSignature to DER format bytes
   static Uint8List ecSigToDER(ECSignature ecSig) {
-    Uint8List r = encodeBigInt(ecSig.r);
-    Uint8List s = encodeBigInt(ecSig.s);
+    List<int> r = EOSKey.toSigned(encodeBigInt(ecSig.r));
+    List<int> s = EOSKey.toSigned(encodeBigInt(ecSig.s));
 
     List<int> b = List();
     b.add(0x02);
-    b.add(r.lengthInBytes);
+    b.add(r.length);
     b.addAll(r);
 
     b.add(0x02);
-    b.add(s.lengthInBytes);
+    b.add(s.length);
     b.addAll(s);
 
     b.insert(0, b.length);

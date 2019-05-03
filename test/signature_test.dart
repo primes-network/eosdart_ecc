@@ -85,5 +85,54 @@ void main() {
       print(signature.toString());
       expect(true, signature.verifyHash(hashData, publicKey));
     });
+
+    test('Sign the hash using private key', () {
+      EOSPrivateKey privateKey = EOSPrivateKey.fromString(
+          '5J9b3xMkbvcT6gYv2EpQ8FD4ZBjgypuNKwE1jxkd7Wd1DYzhk88');
+      EOSPublicKey publicKey = privateKey.toEOSPublicKey();
+      String expectedSig =
+          'SIG_K1_KWfDGxwogny1PUiBAYTfKwPsCSNvM7zWgmXyChdYayZFfyPjddpBUYVdJTq1PjC3PRXADRsqWVU1N2SMQivBDqA7AaRzmB';
+
+      List<int> l = [
+        136,
+        139,
+        63,
+        11,
+        114,
+        68,
+        227,
+        116,
+        92,
+        61,
+        64,
+        121,
+        147,
+        210,
+        233,
+        25,
+        74,
+        164,
+        140,
+        112,
+        45,
+        5,
+        254,
+        165,
+        208,
+        158,
+        53,
+        212,
+        128,
+        190,
+        153,
+        142
+      ];
+      Uint8List hashData = Uint8List.fromList(l);
+      EOSSignature signature = privateKey.signHash(hashData);
+
+      expect(expectedSig, signature.toString());
+      print(signature.toString());
+      expect(true, signature.verifyHash(hashData, publicKey));
+    });
   });
 }

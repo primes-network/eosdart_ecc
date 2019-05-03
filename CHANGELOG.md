@@ -1,3 +1,7 @@
+## 0.3.2
+
+- fix signature bug
+
 ## 0.3.1
 
 - sign method will sign Uint8List
