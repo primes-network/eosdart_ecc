@@ -11,7 +11,7 @@ main() {
   print(publicKey.toString());
 
   // Going to sign the data
-  String data = 'data';
+  String data = '02dd11a0cd4ec12119e2e72d1a553e657323435e08063ac511d8b7f52802cf9c';
 
   // Sign
   EOSSignature signature = privateKey.signString(data);
