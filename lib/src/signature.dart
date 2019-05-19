@@ -155,13 +155,13 @@ class EOSSignature extends EOSKey {
   }
 
   static ECPoint multiplyTwo(ECPoint t, BigInt j, ECPoint x, BigInt k) {
-    var i = max(j.bitLength, k.bitLength) - 1;
-    var R = t.curve.infinity;
-    var both = t + x;
+    int i = max(j.bitLength, k.bitLength) - 1;
+    ECPoint R = t.curve.infinity;
+    ECPoint both = t + x;
 
     while (i >= 0) {
-      var jBit = testBit(j, i);
-      var kBit = testBit(k, i);
+      bool jBit = testBit(j, i);
+      bool kBit = testBit(k, i);
 
       R = R.twice();
 
