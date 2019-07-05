@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:crypto/crypto.dart';
 import "package:pointycastle/api.dart" show PublicKeyParameter;
@@ -145,7 +146,38 @@ class EOSSignature extends EOSKey {
     BigInt eNeg = (-e) % n;
     BigInt rInv = r.modInverse(n);
 
-    ECPoint Q = (R * s + G * eNeg) * rInv;
+    ECPoint Q = multiplyTwo(R, s, G, eNeg) * rInv;
     return Q;
+  }
+
+  static bool testBit(BigInt j, int n) {
+    return (j >> n).toUnsigned(1).toInt() == 1;
+  }
+
+  static ECPoint multiplyTwo(ECPoint t, BigInt j, ECPoint x, BigInt k) {
+    int i = max(j.bitLength, k.bitLength) - 1;
+    ECPoint R = t.curve.infinity;
+    ECPoint both = t + x;
+
+    while (i >= 0) {
+      bool jBit = testBit(j, i);
+      bool kBit = testBit(k, i);
+
+      R = R.twice();
+
+      if (jBit) {
+        if (kBit) {
+          R = R + both;
+        } else {
+          R = R + t;
+        }
+      } else if (kBit) {
+        R = R + x;
+      }
+
+      --i;
+    }
+
+    return R;
   }
 }
