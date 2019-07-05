@@ -1,11 +1,11 @@
 name: eosdart_ecc
 description: Elliptic curve cryptography functions in Dart. Private Key, Public Key, Signature, AES, Encryption, Decryption
-version: 0.3.2
+version: 0.4.0
 homepage: https://github.com/primes-network/eosdart_ecc
 author: primes-network <primes.ntwk@gmail.com>
 
 environment:
-  sdk: '>=2.0.0 <3.0.0'
+  sdk: '>=2.4.0 <3.0.0'
 
 dependencies:
   bs58check: ^1.0.1

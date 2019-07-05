@@ -1,3 +1,7 @@
+## 0.4.0
+
+- fix signature bug
+
 ## 0.3.2
 
 - fix signature bug
