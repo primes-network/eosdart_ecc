@@ -112,7 +112,8 @@ class EOSPrivateKey extends EOSKey {
 
   /// Generate the random EOS private key
   factory EOSPrivateKey.fromRandom() {
-    final int randomLimit = 1 << 32;
+//    final int randomLimit = 1 << 32;
+    final int randomLimit = 4294967296;
     Random randomGenerator;
     try {
       randomGenerator = Random.secure();

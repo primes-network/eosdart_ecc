@@ -1,3 +1,7 @@
+## 0.4.1
+
+- Adopt Flutter Web
+
 ## 0.4.0
 
 - fix signature bug
