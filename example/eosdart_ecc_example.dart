@@ -18,6 +18,10 @@ main() {
   // Print the EOS signature
   print(signature.toString());
 
+  // Recover the EOSPublicKey used to dign the data
+  var recoveredPublicKey = signature.recover(data);
+  print(recoveredPublicKey.toString());
+
   // Verify the data using the signature
   signature.verify(data, publicKey);
 }
