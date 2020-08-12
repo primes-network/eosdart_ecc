@@ -136,17 +136,18 @@ void main() {
     });
 
     test('Recover EOSPublicKey from sign data', () {
-      EOSPrivateKey privateKey = EOSPrivateKey.fromRandom();
-      EOSPublicKey publicKey = privateKey.toEOSPublicKey();
-
       const data = 'this is some data to sign';
-      EOSSignature signature = privateKey.signString(data);
 
-      var recoveredPublicKey = signature.recover(data);
+      var eosPrivateKey = EOSPrivateKey.fromRandom();
+      var eosPublicKey = eosPrivateKey.toEOSPublicKey();
 
-      expect(publicKey.toString(), recoveredPublicKey.toString());
-      print('Generated EOSPublicKey : ${publicKey.toString()}');
-      print('Recovered EOSPublicKey : ${recoveredPublicKey.toString()}');
+      var signature = eosPrivateKey.signString(data);
+
+      var recoveredEOSPublicKey = signature.recover(data);
+
+      expect(eosPublicKey.toString(), recoveredEOSPublicKey.toString());
+      print('Generated EOSPublicKey : ${eosPublicKey.toString()}');
+      print('Recovered EOSPublicKey : ${recoveredEOSPublicKey.toString()}');
     });
   });
 }

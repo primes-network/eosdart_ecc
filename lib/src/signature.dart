@@ -78,29 +78,30 @@ class EOSSignature extends EOSKey {
     return signer.verifySignature(sha256Data, this.ecSig);
   }
 
-/**
+  /**
     * Recover the public key used to create this signature using full data.
-    * @arg {String|Buffer} data - full data
-    * @arg {String} [encoding = 'utf8'] - data encoding (if string)
-    * @return {PublicKey}
+    * @arg {String|Uint8List|List<int>} data - full data
+    * @return {EOSPublicKey}
     */
   EOSPublicKey recover(dynamic data) {
+    var digest;
+
     if (data is String) {
-      data = Uint8List.fromList((data as String).codeUnits);
-    } else if (!data is Uint8List) {
+      var dataBuf = Uint8List.fromList(data.codeUnits);
+      digest = sha256.convert(dataBuf);
+    } else if (data is Uint8List || data is List<int>) {
+      digest = sha256.convert(data);
+    } else {
       throw 'data must be String or uint8list';
     }
 
-    data = sha256.convert(data);
-
-    return recoverHash(data);
+    return recoverHash(digest);
   }
 
   /**
-     *   @arg {String|Buffer} dataSha256 - sha256 hash 32 byte buffer or hex string
-     *   @arg {String} [encoding = 'hex'] - dataSha256 encoding (if string)
-     *  @return {PublicKey}
-     */
+    *  @arg {Digest} dataSha256 - sha256 hash 32 byte buffer
+    *  @return {EOSPublicKey}
+    */
   EOSPublicKey recoverHash(Digest dataSha256) {
     var dataSha256Buf = dataSha256.bytes;
     if (dataSha256Buf.length != 32) {
@@ -113,6 +114,7 @@ class EOSSignature extends EOSKey {
     i2 = i2 & 3;
 
     var q = recoverPubKey(e, ecSig, i2);
+
     return EOSPublicKey.fromPoint(q);
   }
 
