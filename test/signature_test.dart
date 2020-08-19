@@ -134,5 +134,20 @@ void main() {
       print(signature.toString());
       expect(true, signature.verifyHash(hashData, publicKey));
     });
+
+    test('Recover EOSPublicKey from sign data', () {
+      const data = 'this is some data to sign';
+
+      var eosPrivateKey = EOSPrivateKey.fromRandom();
+      var eosPublicKey = eosPrivateKey.toEOSPublicKey();
+
+      var signature = eosPrivateKey.signString(data);
+
+      var recoveredEOSPublicKey = signature.recover(data);
+
+      expect(eosPublicKey.toString(), recoveredEOSPublicKey.toString());
+      print('Generated EOSPublicKey : ${eosPublicKey.toString()}');
+      print('Recovered EOSPublicKey : ${recoveredEOSPublicKey.toString()}');
+    });
   });
 }
