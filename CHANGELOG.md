@@ -1,3 +1,7 @@
+## 0.4.2
+
+- Support recover public key from signature 
+
 ## 0.4.1
 
 - Adopt Flutter Web
