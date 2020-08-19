@@ -118,7 +118,7 @@ class EOSPrivateKey extends EOSKey {
     try {
       randomGenerator = Random.secure();
     } catch (e) {
-      randomGenerator = new Random();
+      randomGenerator = Random();
     }
 
     int randomInt1 = randomGenerator.nextInt(randomLimit);
@@ -221,11 +221,11 @@ class EOSPrivateKey extends EOSKey {
       ..addAll(x)
       ..addAll(newHash);
 
-    Hmac hMacSha256 = new Hmac(sha256, k); // HMAC-SHA256
+    Hmac hMacSha256 = Hmac(sha256, k); // HMAC-SHA256
     k = hMacSha256.convert(d1).bytes;
 
     // Step E
-    hMacSha256 = new Hmac(sha256, k); // HMAC-SHA256
+    hMacSha256 = Hmac(sha256, k); // HMAC-SHA256
     v = hMacSha256.convert(v).bytes;
 
     // Step F
@@ -237,7 +237,7 @@ class EOSPrivateKey extends EOSKey {
     k = hMacSha256.convert(d2).bytes;
 
     // Step G
-    hMacSha256 = new Hmac(sha256, k); // HMAC-SHA256
+    hMacSha256 = Hmac(sha256, k); // HMAC-SHA256
     v = hMacSha256.convert(v).bytes;
     // Step H1/H2a, again, ignored as tlen === qlen (256 bit)
     // Step H2b again
@@ -250,7 +250,7 @@ class EOSPrivateKey extends EOSKey {
         !_checkSig(e, newHash, T)) {
       List<int> d3 = List.from(v)..add(0);
       k = hMacSha256.convert(d3).bytes;
-      hMacSha256 = new Hmac(sha256, k); // HMAC-SHA256
+      hMacSha256 = Hmac(sha256, k); // HMAC-SHA256
       v = hMacSha256.convert(v).bytes;
       // Step H1/H2a, again, ignored as tlen === qlen (256 bit)
       // Step H2b again

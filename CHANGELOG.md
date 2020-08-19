@@ -1,6 +1,10 @@
+## 0.4.3
+
+- Clean up
+
 ## 0.4.2
 
-- Support recover public key from signature 
+- Support recover public key from signature
 
 ## 0.4.1
 
