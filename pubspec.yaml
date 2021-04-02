@@ -9,7 +9,7 @@ environment:
 dependencies:
   bs58check: ^1.0.1
   pointycastle: ^1.0.1
-  crypto: ^2.1.5
+  crypto: ^3.0.1
 
 dev_dependencies:
   test: ^1.0.0
