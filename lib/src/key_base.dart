@@ -15,10 +15,10 @@ abstract class EOSKey {
   static final int VERSION = 0x80;
   static final ECCurve_secp256k1 secp256k1 = ECCurve_secp256k1();
 
-  String keyType;
+  String? keyType;
 
   /// Decode key from string format
-  static Uint8List decodeKey(String keyStr, [String keyType]) {
+  static Uint8List decodeKey(String keyStr, [String? keyType]) {
     Uint8List buffer = base58.decode(keyStr);
 
     Uint8List checksum = buffer.sublist(buffer.length - 4, buffer.length);
@@ -30,7 +30,7 @@ abstract class EOSKey {
     } else {
       Uint8List check = key;
       if (keyType != null) {
-        check = concat(key, utf8.encode(keyType));
+        check = concat(key, utf8.encode(keyType) as Uint8List);
       }
       newChecksum = RIPEMD160Digest().process(check).sublist(0, 4);
     }
@@ -41,7 +41,7 @@ abstract class EOSKey {
   }
 
   /// Encode key to string format using base58 encoding
-  static String encodeKey(Uint8List key, [String keyType]) {
+  static String encodeKey(Uint8List key, [String? keyType]) {
     if (keyType == SHA256X2) {
       Uint8List checksum = sha256x2(key).sublist(0, 4);
       return base58.encode(concat(key, checksum));
@@ -49,7 +49,7 @@ abstract class EOSKey {
 
     Uint8List keyBuffer = key;
     if (keyType != null) {
-      keyBuffer = concat(key, utf8.encode(keyType));
+      keyBuffer = concat(key, utf8.encode(keyType) as Uint8List);
     }
     Uint8List checksum = RIPEMD160Digest().process(keyBuffer).sublist(0, 4);
     return base58.encode(concat(key, checksum));
@@ -59,7 +59,7 @@ abstract class EOSKey {
   static Uint8List sha256x2(Uint8List data) {
     Digest d1 = sha256.convert(data);
     Digest d2 = sha256.convert(d1.bytes);
-    return d2.bytes;
+    return d2.bytes as Uint8List;
   }
 
   static Uint8List concat(Uint8List p1, Uint8List p2) {
@@ -69,7 +69,7 @@ abstract class EOSKey {
   }
 
   static List<int> toSigned(Uint8List bytes) {
-    List<int> result = List();
+    List<int> result = [];
     for (int i = 0; i < bytes.length; i++) {
       int v = bytes[i].toSigned(8);
       //TODO I don't know why, just guess...
