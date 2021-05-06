@@ -207,12 +207,12 @@ class EOSSignature extends EOSKey {
 
       if (jBit) {
         if (kBit) {
-          R = R + both;
+          R = R! + both;
         } else {
-          R = R + t;
+          R = R! + t;
         }
       } else if (kBit) {
-        R = R + x;
+        R = R! + x;
       }
 
       --i;
