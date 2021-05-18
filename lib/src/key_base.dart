@@ -69,7 +69,7 @@ abstract class EOSKey {
   }
 
   static List<int> toSigned(Uint8List bytes) {
-    List<int> result = List();
+    List<int> result = [];
     for (int i = 0; i < bytes.length; i++) {
       int v = bytes[i].toSigned(8);
       //TODO I don't know why, just guess...

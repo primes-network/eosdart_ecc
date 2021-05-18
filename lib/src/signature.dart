@@ -119,7 +119,7 @@ class EOSSignature extends EOSKey {
   }
 
   String toString() {
-    List<int?> b = List();
+    List<int?> b = [];
     b.add(i);
     b.addAll(encodeBigInt(this.ecSig.r));
     b.addAll(encodeBigInt(this.ecSig.s));
@@ -133,7 +133,7 @@ class EOSSignature extends EOSKey {
     List<int> r = EOSKey.toSigned(encodeBigInt(ecSig.r));
     List<int> s = EOSKey.toSigned(encodeBigInt(ecSig.s));
 
-    List<int> b = List();
+    List<int> b = [];
     b.add(0x02);
     b.add(r.length);
     b.addAll(r);

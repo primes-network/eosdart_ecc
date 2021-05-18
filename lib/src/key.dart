@@ -189,7 +189,7 @@ class EOSPrivateKey extends EOSKey {
   }
 
   String toString() {
-    List<int> version = List<int>();
+    List<int> version = [];
     version.add(EOSKey.VERSION);
     Uint8List keyWLeadingVersion =
         EOSKey.concat(Uint8List.fromList(version), this.d!);
