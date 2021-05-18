@@ -17,7 +17,8 @@ import './key_base.dart';
 
 /// EOS Signature
 class EOSSignature extends EOSKey {
-  int? i;
+  int i = 0;
+
   late ECSignature ecSig;
 
   /// Default constructor from i, r, s
@@ -37,7 +38,7 @@ class EOSSignature extends EOSKey {
 
     i = buffer.first;
 
-    if (i! - 27 != i! - 27 & 7) {
+    if (i - 27 != i - 27 & 7) {
       throw InvalidKey('Invalid signature parameter');
     }
 
@@ -109,7 +110,7 @@ class EOSSignature extends EOSKey {
     }
 
     var e = decodeBigInt(dataSha256Buf);
-    var i2 = i!;
+    var i2 = i;
     i2 -= 27;
     i2 = i2 & 3;
 
@@ -119,12 +120,12 @@ class EOSSignature extends EOSKey {
   }
 
   String toString() {
-    List<int?> b = [];
+    List<int> b = [];
     b.add(i);
     b.addAll(encodeBigInt(this.ecSig.r));
     b.addAll(encodeBigInt(this.ecSig.s));
 
-    Uint8List buffer = Uint8List.fromList(b as List<int>);
+    Uint8List buffer = Uint8List.fromList(b);
     return 'SIG_${keyType}_${EOSKey.encodeKey(buffer, keyType)}';
   }
 
