@@ -24,7 +24,7 @@ void main() {
           'SIG_K1_Kg417TSLuhzSpU2bGa21kD1UNaTfAZSCcKmKpZ6fnx3Nqu22gzG3ND4Twur7bzX8oS1J91JvV4rMJcFycGqFBSaY2SJcEQ';
 
       String data = 'data';
-      Uint8List hashData = sha256.convert(utf8.encode(data)).bytes;
+      Uint8List hashData = sha256.convert(utf8.encode(data)).bytes as Uint8List;
       EOSSignature signature = privateKey.signHash(hashData);
       EOSSignature signature2 = privateKey.signString(data);
 
