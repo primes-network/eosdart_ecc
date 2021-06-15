@@ -1,11 +1,11 @@
-import 'dart:typed_data';
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:bs58check/bs58check.dart';
 import 'package:crypto/crypto.dart';
 import 'package:pointycastle/digests/ripemd160.dart';
-import 'package:pointycastle/src/utils.dart';
 import "package:pointycastle/ecc/curves/secp256k1.dart";
+import 'package:pointycastle/src/utils.dart';
 
 import './exception.dart';
 
@@ -15,10 +15,10 @@ abstract class EOSKey {
   static final int VERSION = 0x80;
   static final ECCurve_secp256k1 secp256k1 = ECCurve_secp256k1();
 
-  String keyType;
+  String? keyType;
 
   /// Decode key from string format
-  static Uint8List decodeKey(String keyStr, [String keyType]) {
+  static Uint8List decodeKey(String keyStr, [String? keyType]) {
     Uint8List buffer = base58.decode(keyStr);
 
     Uint8List checksum = buffer.sublist(buffer.length - 4, buffer.length);
@@ -30,18 +30,19 @@ abstract class EOSKey {
     } else {
       Uint8List check = key;
       if (keyType != null) {
-        check = concat(key, utf8.encode(keyType));
+        check = concat(key, Uint8List.fromList(utf8.encode(keyType)));
       }
       newChecksum = RIPEMD160Digest().process(check).sublist(0, 4);
     }
-    if (decodeBigInt(checksum) != decodeBigInt(newChecksum)) {
+    if (decodeBigIntWithSign(1, checksum) !=
+        decodeBigIntWithSign(1, newChecksum)) {
       throw InvalidKey("checksum error");
     }
     return key;
   }
 
   /// Encode key to string format using base58 encoding
-  static String encodeKey(Uint8List key, [String keyType]) {
+  static String encodeKey(Uint8List key, [String? keyType]) {
     if (keyType == SHA256X2) {
       Uint8List checksum = sha256x2(key).sublist(0, 4);
       return base58.encode(concat(key, checksum));
@@ -49,7 +50,7 @@ abstract class EOSKey {
 
     Uint8List keyBuffer = key;
     if (keyType != null) {
-      keyBuffer = concat(key, utf8.encode(keyType));
+      keyBuffer = concat(key, Uint8List.fromList(utf8.encode(keyType)));
     }
     Uint8List checksum = RIPEMD160Digest().process(keyBuffer).sublist(0, 4);
     return base58.encode(concat(key, checksum));
@@ -59,7 +60,7 @@ abstract class EOSKey {
   static Uint8List sha256x2(Uint8List data) {
     Digest d1 = sha256.convert(data);
     Digest d2 = sha256.convert(d1.bytes);
-    return d2.bytes;
+    return Uint8List.fromList(d2.bytes);
   }
 
   static Uint8List concat(Uint8List p1, Uint8List p2) {
@@ -69,7 +70,7 @@ abstract class EOSKey {
   }
 
   static List<int> toSigned(Uint8List bytes) {
-    List<int> result = List();
+    List<int> result = <int>[];
     for (int i = 0; i < bytes.length; i++) {
       int v = bytes[i].toSigned(8);
       //TODO I don't know why, just guess...

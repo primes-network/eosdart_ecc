@@ -1,14 +1,14 @@
-import 'dart:typed_data';
 import 'dart:convert';
 import 'dart:math';
+import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
 import "package:pointycastle/api.dart" show PublicKeyParameter;
+import "package:pointycastle/digests/sha256.dart";
 import 'package:pointycastle/ecc/api.dart'
     show ECPublicKey, ECSignature, ECPoint;
-import "package:pointycastle/signers/ecdsa_signer.dart";
 import 'package:pointycastle/macs/hmac.dart';
-import "package:pointycastle/digests/sha256.dart";
+import "package:pointycastle/signers/ecdsa_signer.dart";
 import 'package:pointycastle/src/utils.dart';
 
 import './exception.dart';
@@ -17,8 +17,8 @@ import './key_base.dart';
 
 /// EOS Signature
 class EOSSignature extends EOSKey {
-  int i;
-  ECSignature ecSig;
+  int? i;
+  late ECSignature ecSig;
 
   /// Default constructor from i, r, s
   EOSSignature(this.i, BigInt r, BigInt s) {
@@ -27,7 +27,7 @@ class EOSSignature extends EOSKey {
   }
 
   /// Construct EOS signature from buffer
-  EOSSignature.fromBuffer(Uint8List buffer, String keyType) {
+  EOSSignature.fromBuffer(Uint8List buffer, String? keyType) {
     this.keyType = keyType;
 
     if (buffer.lengthInBytes != 65) {
@@ -37,12 +37,12 @@ class EOSSignature extends EOSKey {
 
     i = buffer.first;
 
-    if (i - 27 != i - 27 & 7) {
+    if (i! - 27 != i! - 27 & 7) {
       throw InvalidKey('Invalid signature parameter');
     }
 
-    BigInt r = decodeBigInt(buffer.sublist(1, 33));
-    BigInt s = decodeBigInt(buffer.sublist(33, 65));
+    BigInt r = decodeBigIntWithSign(1, buffer.sublist(1, 33));
+    BigInt s = decodeBigIntWithSign(1, buffer.sublist(33, 65));
     this.ecSig = ECSignature(r, s);
   }
 
@@ -54,8 +54,8 @@ class EOSSignature extends EOSKey {
 
     if (match.length == 1) {
       Match m = match.first;
-      String keyType = m.group(1);
-      Uint8List key = EOSKey.decodeKey(m.group(2), keyType);
+      String? keyType = m.group(1);
+      Uint8List key = EOSKey.decodeKey(m.group(2)!, keyType);
       return EOSSignature.fromBuffer(key, keyType);
     }
 
@@ -66,12 +66,12 @@ class EOSSignature extends EOSKey {
   bool verify(String data, EOSPublicKey publicKey) {
     Digest d = sha256.convert(utf8.encode(data));
 
-    return verifyHash(d.bytes, publicKey);
+    return verifyHash(Uint8List.fromList(d.bytes), publicKey);
   }
 
   /// Verify the signature from in SHA256 hashed data
   bool verifyHash(Uint8List sha256Data, EOSPublicKey publicKey) {
-    ECPoint q = publicKey.q;
+    ECPoint? q = publicKey.q;
     final signer = ECDSASigner(null, HMac(SHA256Digest(), 64));
     signer.init(false, PublicKeyParameter(ECPublicKey(q, EOSKey.secp256k1)));
 
@@ -108,8 +108,8 @@ class EOSSignature extends EOSKey {
       throw "dataSha256: 32 byte String or buffer required";
     }
 
-    var e = decodeBigInt(dataSha256Buf);
-    var i2 = i;
+    var e = decodeBigIntWithSign(1, dataSha256Buf);
+    var i2 = i!;
     i2 -= 27;
     i2 = i2 & 3;
 
@@ -119,8 +119,8 @@ class EOSSignature extends EOSKey {
   }
 
   String toString() {
-    List<int> b = List();
-    b.add(i);
+    List<int> b = <int>[];
+    b.add(i!);
     b.addAll(encodeBigInt(this.ecSig.r));
     b.addAll(encodeBigInt(this.ecSig.s));
 
@@ -133,7 +133,7 @@ class EOSSignature extends EOSKey {
     List<int> r = EOSKey.toSigned(encodeBigInt(ecSig.r));
     List<int> s = EOSKey.toSigned(encodeBigInt(ecSig.s));
 
-    List<int> b = List();
+    List<int> b = <int>[];
     b.add(0x02);
     b.add(r.length);
     b.addAll(r);
@@ -152,7 +152,7 @@ class EOSSignature extends EOSKey {
   static int calcPubKeyRecoveryParam(
       BigInt e, ECSignature ecSig, EOSPublicKey publicKey) {
     for (int i = 0; i < 4; i++) {
-      ECPoint Qprime = recoverPubKey(e, ecSig, i);
+      ECPoint? Qprime = recoverPubKey(e, ecSig, i);
       if (Qprime == publicKey.q) {
         return i;
       }
@@ -161,7 +161,7 @@ class EOSSignature extends EOSKey {
   }
 
   /// Recovery EOS public key from ECSignature
-  static ECPoint recoverPubKey(BigInt e, ECSignature ecSig, int i) {
+  static ECPoint? recoverPubKey(BigInt e, ECSignature ecSig, int i) {
     BigInt n = EOSKey.secp256k1.n;
     ECPoint G = EOSKey.secp256k1.G;
 
@@ -178,7 +178,7 @@ class EOSSignature extends EOSKey {
     // 1.1 Let x = r + jn
     BigInt x = isSecondKey > 0 ? r + n : r;
     ECPoint R = EOSKey.secp256k1.curve.decompressPoint(isYOdd, x);
-    ECPoint nR = R * n;
+    ECPoint nR = (R * n)!;
     if (!nR.isInfinity) {
       throw 'nR is not a valid curve point';
     }
@@ -186,7 +186,7 @@ class EOSSignature extends EOSKey {
     BigInt eNeg = (-e) % n;
     BigInt rInv = r.modInverse(n);
 
-    ECPoint Q = multiplyTwo(R, s, G, eNeg) * rInv;
+    ECPoint? Q = multiplyTwo(R, s, G, eNeg)! * rInv;
     return Q;
   }
 
@@ -194,25 +194,25 @@ class EOSSignature extends EOSKey {
     return (j >> n).toUnsigned(1).toInt() == 1;
   }
 
-  static ECPoint multiplyTwo(ECPoint t, BigInt j, ECPoint x, BigInt k) {
+  static ECPoint? multiplyTwo(ECPoint t, BigInt j, ECPoint x, BigInt k) {
     int i = max(j.bitLength, k.bitLength) - 1;
-    ECPoint R = t.curve.infinity;
-    ECPoint both = t + x;
+    ECPoint? R = t.curve.infinity;
+    ECPoint? both = t + x;
 
     while (i >= 0) {
       bool jBit = testBit(j, i);
       bool kBit = testBit(k, i);
 
-      R = R.twice();
+      R = R!.twice();
 
       if (jBit) {
         if (kBit) {
-          R = R + both;
+          R = R! + both;
         } else {
-          R = R + t;
+          R = R! + t;
         }
       } else if (kBit) {
-        R = R + x;
+        R = R! + x;
       }
 
       --i;
