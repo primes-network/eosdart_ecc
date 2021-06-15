@@ -30,11 +30,12 @@ abstract class EOSKey {
     } else {
       Uint8List check = key;
       if (keyType != null) {
-        check = concat(key, utf8.encode(keyType) as Uint8List);
+        check = concat(key, Uint8List.fromList(utf8.encode(keyType)));
       }
       newChecksum = RIPEMD160Digest().process(check).sublist(0, 4);
     }
-    if (decodeBigInt(checksum) != decodeBigInt(newChecksum)) {
+    if (decodeBigIntWithSign(1, checksum) !=
+        decodeBigIntWithSign(1, newChecksum)) {
       throw InvalidKey("checksum error");
     }
     return key;
@@ -49,7 +50,7 @@ abstract class EOSKey {
 
     Uint8List keyBuffer = key;
     if (keyType != null) {
-      keyBuffer = concat(key, utf8.encode(keyType) as Uint8List);
+      keyBuffer = concat(key, Uint8List.fromList(utf8.encode(keyType)));
     }
     Uint8List checksum = RIPEMD160Digest().process(keyBuffer).sublist(0, 4);
     return base58.encode(concat(key, checksum));
@@ -59,7 +60,7 @@ abstract class EOSKey {
   static Uint8List sha256x2(Uint8List data) {
     Digest d1 = sha256.convert(data);
     Digest d2 = sha256.convert(d1.bytes);
-    return d2.bytes as Uint8List;
+    return Uint8List.fromList(d2.bytes);
   }
 
   static Uint8List concat(Uint8List p1, Uint8List p2) {

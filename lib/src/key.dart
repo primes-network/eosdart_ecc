@@ -107,7 +107,7 @@ class EOSPrivateKey extends EOSKey {
   /// For the given seed, the generated key would always be the same
   factory EOSPrivateKey.fromSeed(String seed) {
     Digest s = sha256.convert(utf8.encode(seed));
-    return EOSPrivateKey.fromBuffer(s.bytes as Uint8List?);
+    return EOSPrivateKey.fromBuffer(Uint8List.fromList(s.bytes));
   }
 
   /// Generate the random EOS private key
@@ -135,7 +135,7 @@ class EOSPrivateKey extends EOSKey {
     entropy.addAll(entropy3);
     Uint8List randomKey = Uint8List.fromList(entropy);
     Digest d = sha256.convert(randomKey);
-    return EOSPrivateKey.fromBuffer(d.bytes as Uint8List?);
+    return EOSPrivateKey.fromBuffer(Uint8List.fromList(d.bytes));
   }
 
   /// Check if the private key is WIF format
@@ -143,7 +143,7 @@ class EOSPrivateKey extends EOSKey {
 
   /// Get the public key string from this private key
   EOSPublicKey toEOSPublicKey() {
-    BigInt privateKeyNum = decodeBigInt(this.d!);
+    BigInt privateKeyNum = decodeBigIntWithSign(1, this.d!);
     ECPoint? ecPoint = EOSKey.secp256k1.G * privateKeyNum;
 
     return EOSPublicKey.fromPoint(ecPoint);
@@ -152,19 +152,19 @@ class EOSPrivateKey extends EOSKey {
   /// Sign the bytes data using the private key
   EOSSignature sign(Uint8List data) {
     Digest d = sha256.convert(data);
-    return signHash(d.bytes as Uint8List);
+    return signHash(Uint8List.fromList(d.bytes));
   }
 
   /// Sign the string data using the private key
   EOSSignature signString(String data) {
-    return sign(utf8.encode(data) as Uint8List);
+    return sign(Uint8List.fromList(utf8.encode(data)));
   }
 
   /// Sign the SHA256 hashed data using the private key
   EOSSignature signHash(Uint8List sha256Data) {
     int nonce = 0;
     BigInt n = EOSKey.secp256k1.n;
-    BigInt e = decodeBigInt(sha256Data);
+    BigInt e = decodeBigIntWithSign(1, sha256Data);
 
     while (true) {
       _deterministicGenerateK(sha256Data, this.d!, e, nonce++);
@@ -180,7 +180,7 @@ class EOSPrivateKey extends EOSKey {
       int lenS = der.elementAt(5 + lenR);
       if (lenR == 32 && lenS == 32) {
         int i = EOSSignature.calcPubKeyRecoveryParam(
-            decodeBigInt(sha256Data), sig, this.toEOSPublicKey());
+            decodeBigIntWithSign(1, sha256Data), sig, this.toEOSPublicKey());
         i += 4; // compressed
         i += 27; // compact  //  24 or 27 :( forcing odd-y 2nd key candidate)
         return EOSSignature(i, sig.r, sig.s);
@@ -222,11 +222,11 @@ class EOSPrivateKey extends EOSKey {
       ..addAll(newHash);
 
     Hmac hMacSha256 = Hmac(sha256, k); // HMAC-SHA256
-    k = hMacSha256.convert(d1).bytes as Uint8List;
+    k = Uint8List.fromList(hMacSha256.convert(d1).bytes);
 
     // Step E
     hMacSha256 = Hmac(sha256, k); // HMAC-SHA256
-    v = hMacSha256.convert(v).bytes as Uint8List;
+    v = Uint8List.fromList(hMacSha256.convert(v).bytes);
 
     // Step F
     List<int> d2 = List.from(v)
@@ -234,29 +234,29 @@ class EOSPrivateKey extends EOSKey {
       ..addAll(x)
       ..addAll(newHash);
 
-    k = hMacSha256.convert(d2).bytes as Uint8List;
+    k = Uint8List.fromList(hMacSha256.convert(d2).bytes);
 
     // Step G
     hMacSha256 = Hmac(sha256, k); // HMAC-SHA256
-    v = hMacSha256.convert(v).bytes as Uint8List;
+    v = Uint8List.fromList(hMacSha256.convert(v).bytes);
     // Step H1/H2a, again, ignored as tlen === qlen (256 bit)
     // Step H2b again
-    v = hMacSha256.convert(v).bytes as Uint8List;
+    v = Uint8List.fromList(hMacSha256.convert(v).bytes);
 
-    BigInt T = decodeBigInt(v);
+    BigInt T = decodeBigIntWithSign(1, v);
     // Step H3, repeat until T is within the interval [1, n - 1]
     while (T.sign <= 0 ||
         T.compareTo(EOSKey.secp256k1.n) >= 0 ||
-        !_checkSig(e, newHash as Uint8List, T)) {
+        !_checkSig(e, Uint8List.fromList(newHash), T)) {
       List<int> d3 = List.from(v)..add(0);
-      k = hMacSha256.convert(d3).bytes as Uint8List;
+      k = Uint8List.fromList(hMacSha256.convert(d3).bytes);
       hMacSha256 = Hmac(sha256, k); // HMAC-SHA256
-      v = hMacSha256.convert(v).bytes as Uint8List;
+      v = Uint8List.fromList(hMacSha256.convert(v).bytes);
       // Step H1/H2a, again, ignored as tlen === qlen (256 bit)
       // Step H2b again
-      v = hMacSha256.convert(v).bytes as Uint8List;
+      v = Uint8List.fromList(hMacSha256.convert(v).bytes);
 
-      T = decodeBigInt(v);
+      T = decodeBigIntWithSign(1, v);
     }
     return T;
   }
@@ -274,7 +274,9 @@ class EOSPrivateKey extends EOSKey {
       return false;
     }
 
-    _s = k.modInverse(EOSKey.secp256k1.n) * (e + decodeBigInt(d!) * _r) % n;
+    _s = k.modInverse(EOSKey.secp256k1.n) *
+        (e + decodeBigIntWithSign(1, d!) * _r) %
+        n;
     if (_s.sign == 0) {
       return false;
     }

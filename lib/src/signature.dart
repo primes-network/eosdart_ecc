@@ -41,8 +41,8 @@ class EOSSignature extends EOSKey {
       throw InvalidKey('Invalid signature parameter');
     }
 
-    BigInt r = decodeBigInt(buffer.sublist(1, 33));
-    BigInt s = decodeBigInt(buffer.sublist(33, 65));
+    BigInt r = decodeBigIntWithSign(1, buffer.sublist(1, 33));
+    BigInt s = decodeBigIntWithSign(1, buffer.sublist(33, 65));
     this.ecSig = ECSignature(r, s);
   }
 
@@ -66,7 +66,7 @@ class EOSSignature extends EOSKey {
   bool verify(String data, EOSPublicKey publicKey) {
     Digest d = sha256.convert(utf8.encode(data));
 
-    return verifyHash(d.bytes as Uint8List, publicKey);
+    return verifyHash(Uint8List.fromList(d.bytes), publicKey);
   }
 
   /// Verify the signature from in SHA256 hashed data
@@ -108,7 +108,7 @@ class EOSSignature extends EOSKey {
       throw "dataSha256: 32 byte String or buffer required";
     }
 
-    var e = decodeBigInt(dataSha256Buf);
+    var e = decodeBigIntWithSign(1, dataSha256Buf);
     var i2 = i!;
     i2 -= 27;
     i2 = i2 & 3;
@@ -119,12 +119,12 @@ class EOSSignature extends EOSKey {
   }
 
   String toString() {
-    List<int?> b = <int>[];
-    b.add(i);
+    List<int> b = <int>[];
+    b.add(i!);
     b.addAll(encodeBigInt(this.ecSig.r));
     b.addAll(encodeBigInt(this.ecSig.s));
 
-    Uint8List buffer = Uint8List.fromList(b as List<int>);
+    Uint8List buffer = Uint8List.fromList(b);
     return 'SIG_${keyType}_${EOSKey.encodeKey(buffer, keyType)}';
   }
 
