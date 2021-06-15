@@ -1,3 +1,7 @@
+## 0.4.4
+
+- Null safety
+
 ## 0.4.3
 
 - Clean up
